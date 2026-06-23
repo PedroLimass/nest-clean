@@ -25,6 +25,16 @@ export default tseslint.config(
     },
   },
   {
+    files: ['vitest.config.ts', 'vitest.config.e2e.ts'],
+    languageOptions: {
+      parserOptions: {
+        project: './tsconfig.vitest.json',
+        projectService: false,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+  {
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-floating-promises': 'warn',
