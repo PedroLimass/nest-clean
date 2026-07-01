@@ -36,6 +36,9 @@ beforeAll(() => {
 });
 
 beforeEach(async () => {
+  await prisma.attachment.deleteMany();
+  await prisma.comment.deleteMany();
+  await prisma.answer.deleteMany();
   await prisma.question.deleteMany();
   await prisma.user.deleteMany();
 });
