@@ -1,5 +1,4 @@
 import 'dotenv/config';
-
 import { PrismaPg } from '@prisma/adapter-pg';
 import { execSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
