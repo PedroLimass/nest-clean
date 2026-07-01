@@ -4,8 +4,13 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "noEmit": true,
-    "types": ["node"]
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["src/*"],
+      "test/*": ["src/test/*"]
+    },
+    "types": ["node", "vitest/globals"]
   },
-  "include": ["vitest.config.ts", "vitest.config.e2e.ts"],
+  "include": ["src/**/*.spec.ts", "vitest.config.ts", "vitest.config.e2e.ts"],
   "exclude": ["node_modules", "dist"]
 }

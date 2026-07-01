@@ -22,9 +22,18 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "test/*": ["src/test/*"]
     },
-    "types": ["vitest/globals"]
+    "types": ["node", "vitest/globals"]
   },
-  "exclude": ["node_modules", "dist", "vitest.config.ts", "vitest.config.e2e.ts", "**/*.spec.ts"]
+  "include": ["src/**/*"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "vitest.config.ts",
+    "vitest.config.e2e.ts",
+    "src/test/setup-e2e.ts",
+    "src/test/jest-e2e.json"
+  ]
 }

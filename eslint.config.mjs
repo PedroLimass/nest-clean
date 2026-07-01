@@ -25,6 +25,24 @@ export default tseslint.config(
     },
   },
   {
+    files: ['src/**/*.spec.ts'],
+    languageOptions: {
+      globals: {
+        ...globals.vitest,
+      },
+      parserOptions: {
+        project: './tsconfig.vitest.json',
+        projectService: false,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+    },
+  },
+  {
     files: ['vitest.config.ts', 'vitest.config.e2e.ts'],
     languageOptions: {
       parserOptions: {
