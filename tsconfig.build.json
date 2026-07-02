@@ -6,7 +6,7 @@
     "rootDir": "src",
     "resolvePackageJsonExports": false,
     "incremental": false,
-    "types": ["node"]
+    "types": ["node", "express", "multer"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "test", "dist", "**/*spec.ts", "src/test"]

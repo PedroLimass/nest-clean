@@ -25,7 +25,7 @@
       "@/*": ["src/*"],
       "test/*": ["src/test/*"]
     },
-    "types": ["node", "vitest/globals"]
+    "types": ["node", "vitest/globals", "express", "multer"]
   },
   "include": ["src/**/*"],
   "exclude": [
