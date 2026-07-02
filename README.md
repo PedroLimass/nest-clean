@@ -1,48 +1,177 @@
 # Nest Clean
 
-API de fórum construída com **NestJS** e **Clean Architecture**, baseada no curso [05-nest-clean](https://github.com/rocketseat-education/05-nest-clean) da Rocketseat.
+API REST de fórum Q&A construída com **NestJS** e **Clean Architecture** — perguntas, respostas, comentários, anexos, notificações em tempo real e cache com Redis.
+
+---
+
+## Destaques
+
+- **Clean Architecture** com domínio isolado de frameworks e banco de dados
+- **Domain Events** para notificações assíncronas (nova resposta, melhor resposta escolhida)
+- **Cache Redis** com invalidação automática ao editar perguntas
+- **Upload de anexos** integrado ao Cloudflare R2 (compatível com S3)
+- **Autenticação JWT RS256** com chaves assimétricas
+- **Testes unitários e E2E** com Vitest e schemas isolados por suite
+- **Documentação interativa** com OpenAPI + [Scalar](https://scalar.com)
+
+---
 
 ## Stack
 
-- **NestJS** — framework HTTP
-- **Prisma** — ORM (PostgreSQL)
-- **Redis** — cache de detalhes de perguntas
-- **Cloudflare R2** — armazenamento de anexos
-- **JWT (RS256)** — autenticação
-- **Vitest** — testes unitários e E2E
-- **Scalar** — documentação interativa da API (OpenAPI)
+| Camada | Tecnologias |
+|---|---|
+| Backend | NestJS 11, TypeScript |
+| Banco | PostgreSQL, Prisma 7 |
+| Cache | Redis, ioredis |
+| Storage | Cloudflare R2 (AWS SDK) |
+| Auth | Passport JWT, RS256 |
+| Validação | Zod |
+| Testes | Vitest, Supertest |
+| Docs | OpenAPI, Scalar |
+| Infra | Docker Compose |
 
-## Pré-requisitos
+---
+
+## Arquitetura
+
+O projeto separa **regras de negócio** da **infraestrutura**, facilitando testes, manutenção e troca de adapters (Prisma, Redis, R2) sem impactar o domínio.
+
+```mermaid
+flowchart TB
+  subgraph infra [Infraestrutura]
+    HTTP[Controllers + Presenters]
+    Prisma[Prisma Repositories]
+    Redis[Redis Cache]
+    R2[Cloudflare R2]
+    Events[Domain Event Subscribers]
+  end
+
+  subgraph domain [Domínio]
+    UC[Use Cases]
+    ENT[Entities + Value Objects]
+    REPO[Repository Interfaces]
+  end
+
+  subgraph core [Core]
+    Either[Either / Errors]
+    DE[Domain Events]
+  end
+
+  HTTP --> UC
+  UC --> REPO
+  Prisma -.-> REPO
+  Redis -.-> Prisma
+  R2 --> UC
+  UC --> ENT
+  ENT --> DE
+  DE --> Events
+  Events --> UC
+  UC --> Either
+```
+
+### Estrutura de pastas
+
+```
+src/
+├── core/                 # Either, AggregateRoot, DomainEvents, erros base
+├── domain/
+│   ├── forum/            # Perguntas, respostas, comentários, anexos
+│   └── notification/     # Notificações + subscribers de eventos
+├── infra/
+│   ├── http/             # Controllers, pipes, presenters, Scalar
+│   ├── database/         # Prisma, mappers, repositories
+│   ├── cache/            # Redis
+│   ├── storage/          # Upload R2
+│   ├── events/           # Registro de subscribers NestJS
+│   └── auth/             # JWT, guards, decorators
+└── test/                 # Factories, repositórios in-memory, utils E2E
+```
+
+### Padrões aplicados
+
+| Padrão | Onde |
+|---|---|
+| Repository | Abstração de persistência no domínio, implementação no Prisma |
+| Use Case | Uma ação de negócio por classe (`CreateQuestion`, `AnswerQuestion`…) |
+| Either | Retorno funcional de sucesso/erro sem exceções no domínio |
+| Value Object | `Slug`, `QuestionDetails`, `CommentWithAuthor` |
+| Domain Events | `AnswerCreated`, `QuestionBestAnswerChosen` → notificações |
+| Presenter | Transformação entity → JSON na camada HTTP |
+| Dependency Inversion | Domínio depende de abstrações, infra injeta implementações |
+
+---
+
+## Funcionalidades
+
+### Fórum
+- CRUD de perguntas e respostas
+- Comentários em perguntas e respostas (com autor)
+- Escolha da melhor resposta
+- Upload de anexos (png, jpg, jpeg, pdf — máx. 2 MB)
+- Detalhes da pergunta com autor, anexos e cache
+
+### Notificações
+- Disparadas por eventos de domínio
+- Marcar como lida via API
+
+### Autenticação
+- Registro e login de alunos
+- Rotas protegidas com Bearer JWT
+
+---
+
+## Documentação da API
+
+Com o servidor rodando:
+
+| URL | Descrição |
+|---|---|
+| [`/docs`](http://localhost:3333/docs) | Interface Scalar (testar rotas no browser) |
+| [`/openapi.json`](http://localhost:3333/openapi.json) | Spec OpenAPI |
+
+**Como autenticar no Scalar:**
+
+1. `POST /accounts` — criar conta **ou** `POST /sessions` — login
+2. Copiar o `access_token`
+3. Clicar em **Authorize** → `Bearer <token>`
+
+---
+
+## Quick Start
+
+### Pré-requisitos
 
 - Node.js 20+
-- Docker e Docker Compose
+- Docker + Docker Compose
 - Arquivos `.env` e `.env.test` configurados
 
-## Configuração
+### Instalação
 
 ```bash
-# Instalar dependências
+git clone <seu-repo>
+cd nest-clean
+
 npm install
-
-# Subir PostgreSQL e Redis
 docker-compose up -d
-
-# Rodar migrations
-npm run prisma:migrate
-
-# Gerar client Prisma
 npm run prisma:generate
+npm run prisma:migrate
+npm run start:dev
 ```
+
+API disponível em `http://localhost:3333` · Docs em `http://localhost:3333/docs`
 
 ### Variáveis de ambiente
 
+<details>
+<summary>Clique para expandir</summary>
+
 | Variável | Descrição |
 |---|---|
-| `DATABASE_URL` | URL de conexão PostgreSQL |
+| `DATABASE_URL` | Conexão PostgreSQL |
 | `JWT_PRIVATE_KEY` | Chave privada JWT (base64) |
 | `JWT_PUBLIC_KEY` | Chave pública JWT (base64) |
 | `CLOUDFLARE_ACCOUNT_ID` | ID da conta Cloudflare |
-| `CLOUDFLARE_PUBLIC_URL` | URL pública do bucket R2 |
+| `CLOUDFLARE_PUBLIC_URL` | URL pública do bucket |
 | `AWS_BUCKET_NAME` | Nome do bucket R2 |
 | `AWS_ACCESS_KEY_ID` | Access key R2 |
 | `AWS_SECRET_ACCESS_KEY` | Secret key R2 |
@@ -51,123 +180,100 @@ npm run prisma:generate
 | `REDIS_DB` | Database Redis (padrão: `0`) |
 | `PORT` | Porta da API (padrão: `3333`) |
 
-## Executar
+</details>
 
-```bash
-# Desenvolvimento
-npm run start:dev
+---
 
-# Produção
-npm run build
-npm run start:prod
-```
+## Endpoints
 
-A API sobe em `http://localhost:3333` (ou na porta definida em `PORT`).
+<details>
+<summary><strong>Autenticação</strong> — rotas públicas</summary>
 
-## Documentação da API (Scalar)
+| Método | Rota | Descrição |
+|---|---|---|
+| `POST` | `/sessions` | Login → retorna JWT |
+| `POST` | `/accounts` | Criar conta |
 
-Com o servidor rodando, acesse:
+</details>
 
-| URL | Descrição |
-|---|---|
-| [`/docs`](http://localhost:3333/docs) | Interface Scalar — documentação interativa |
-| [`/openapi.json`](http://localhost:3333/openapi.json) | Especificação OpenAPI em JSON |
+<details>
+<summary><strong>Perguntas</strong></summary>
 
-### Autenticação na documentação
+| Método | Rota | Descrição |
+|---|---|---|
+| `GET` | `/questions` | Listar recentes (`?page=1`) |
+| `POST` | `/questions` | Criar pergunta |
+| `GET` | `/questions/:slug` | Detalhes (cache Redis) |
+| `PUT` | `/questions/:id` | Editar |
+| `DELETE` | `/questions/:id` | Excluir |
 
-1. Crie uma conta em `POST /accounts` ou autentique-se em `POST /sessions`
-2. Copie o `access_token` da resposta
-3. No Scalar, clique em **Authorize** e informe: `Bearer <seu-token>`
+</details>
 
-Rotas públicas (sem token): `POST /accounts` e `POST /sessions`.
+<details>
+<summary><strong>Respostas</strong></summary>
 
-## Rotas
+| Método | Rota | Descrição |
+|---|---|---|
+| `GET` | `/questions/:questionId/answers` | Listar |
+| `POST` | `/questions/:questionId/answers` | Criar |
+| `PUT` | `/answers/:id` | Editar |
+| `DELETE` | `/answers/:id` | Excluir |
+| `PATCH` | `/answers/:answerId/choose-as-best` | Melhor resposta |
 
-### Autenticação
+</details>
 
-| Método | Rota | Descrição | Auth |
-|---|---|---|---|
-| `POST` | `/sessions` | Autenticar e obter JWT | Não |
-| `POST` | `/accounts` | Criar conta de aluno | Não |
+<details>
+<summary><strong>Comentários · Anexos · Notificações</strong></summary>
 
-### Perguntas
+| Método | Rota | Descrição |
+|---|---|---|
+| `GET/POST` | `/questions/:id/comments` | Comentários da pergunta |
+| `GET/POST` | `/answers/:id/comments` | Comentários da resposta |
+| `DELETE` | `/questions/comments/:id` | Excluir comentário |
+| `DELETE` | `/answers/comments/:id` | Excluir comentário |
+| `POST` | `/attachments` | Upload multipart |
+| `PATCH` | `/notifications/:id/read` | Marcar como lida |
 
-| Método | Rota | Descrição | Auth |
-|---|---|---|---|
-| `GET` | `/questions` | Listar perguntas recentes (`?page=1`) | Sim |
-| `POST` | `/questions` | Criar pergunta | Sim |
-| `GET` | `/questions/:slug` | Detalhes da pergunta (com cache Redis) | Sim |
-| `PUT` | `/questions/:id` | Editar pergunta | Sim |
-| `DELETE` | `/questions/:id` | Excluir pergunta | Sim |
+</details>
 
-### Respostas
+> Detalhes completos, schemas e exemplos de request/response estão em [`/docs`](http://localhost:3333/docs).
 
-| Método | Rota | Descrição | Auth |
-|---|---|---|---|
-| `GET` | `/questions/:questionId/answers` | Listar respostas (`?page=1`) | Sim |
-| `POST` | `/questions/:questionId/answers` | Responder pergunta | Sim |
-| `PUT` | `/answers/:id` | Editar resposta | Sim |
-| `DELETE` | `/answers/:id` | Excluir resposta | Sim |
-| `PATCH` | `/answers/:answerId/choose-as-best` | Escolher melhor resposta | Sim |
-
-### Comentários
-
-| Método | Rota | Descrição | Auth |
-|---|---|---|---|
-| `GET` | `/questions/:questionId/comments` | Listar comentários da pergunta | Sim |
-| `POST` | `/questions/:questionId/comments` | Comentar na pergunta | Sim |
-| `DELETE` | `/questions/comments/:id` | Excluir comentário da pergunta | Sim |
-| `GET` | `/answers/:answerId/comments` | Listar comentários da resposta | Sim |
-| `POST` | `/answers/:answerId/comments` | Comentar na resposta | Sim |
-| `DELETE` | `/answers/comments/:id` | Excluir comentário da resposta | Sim |
-
-### Anexos
-
-| Método | Rota | Descrição | Auth |
-|---|---|---|---|
-| `POST` | `/attachments` | Upload de arquivo (multipart, máx. 2MB) | Sim |
-
-### Notificações
-
-| Método | Rota | Descrição | Auth |
-|---|---|---|---|
-| `PATCH` | `/notifications/:notificationId/read` | Marcar notificação como lida | Sim |
-
-> Notificações são criadas automaticamente por **eventos de domínio** (nova resposta, melhor resposta escolhida).
+---
 
 ## Testes
 
 ```bash
-# Unitários
-npm run test
-
-# E2E (requer Docker com Postgres e Redis)
-npm run test:e2e
-
-# Cobertura
-npm run test:cov
+npm run test          # Unitários (use cases, entities)
+npm run test:e2e      # E2E (controllers + eventos + cache)
+npm run test:cov      # Cobertura
 ```
 
-## Arquitetura
+Os testes E2E usam **schema PostgreSQL isolado por suite** e **flush do Redis** entre execuções, garantindo independência entre testes.
 
-```
-src/
-├── core/           # Entidades base, Either, eventos, erros
-├── domain/         # Regras de negócio (use cases, entities, subscribers)
-├── infra/          # HTTP, Prisma, Redis, R2, auth, env
-└── test/           # Factories e repositórios in-memory
-```
+---
 
-A documentação OpenAPI (Scalar) fica apenas na camada `infra/http`, sem poluir o domínio.
-
-## Docker
+## Scripts úteis
 
 ```bash
-npm run docker:up       # Sobe Postgres + Redis
-npm run docker:down     # Para os containers
-npm run docker:logs     # Logs dos serviços
-npm run docker:exec     # psql no Postgres
+npm run start:dev       # Desenvolvimento com hot reload
+npm run build           # Build de produção
+npm run lint            # ESLint
+npm run docker:up       # Postgres + Redis
+npm run prisma:studio   # GUI do banco
 ```
+
+---
+
+## O que este projeto demonstra
+
+- Organização de código em camadas com **baixo acoplamento**
+- Testabilidade via repositórios in-memory e factories
+- Integração com serviços externos (Postgres, Redis, R2) via adapters
+- Eventos de domínio desacoplando side effects (notificações)
+- Documentação de API profissional sem poluir o domínio
+- Boas práticas NestJS: modules, guards, pipes, DI
+
+---
 
 ## Licença
 
