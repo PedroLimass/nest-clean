@@ -6,12 +6,14 @@ import { NotAllowedError } from '@/core/errors/errors/not-allowed-error';
 import { InMemoryStudentsRepository } from 'test/repositories/in-memory-students-repository';
 
 let inMemoryQuestionCommentsRepository: InMemoryQuestionCommentsRepository;
+let inMemoryStudentsRepository: InMemoryStudentsRepository;
 let sut: DeleteQuestionCommentUseCase;
 
 describe('Delete Question Comment', () => {
   beforeEach(() => {
+    inMemoryStudentsRepository = new InMemoryStudentsRepository();
     inMemoryQuestionCommentsRepository = new InMemoryQuestionCommentsRepository(
-      new InMemoryStudentsRepository(),
+      inMemoryStudentsRepository,
     );
 
     sut = new DeleteQuestionCommentUseCase(inMemoryQuestionCommentsRepository);

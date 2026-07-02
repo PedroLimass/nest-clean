@@ -8,9 +8,18 @@ import {
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { InvalidAttachmentTypeError } from '@/domain/forum/application/use-cases/errors/invalid-attachment-type-error';
 import { UploadAndCreateAttachmentUseCase } from '@/domain/forum/application/use-cases/upload-and-create-attachment';
+import { AttachmentUploadResponseDto } from '../swagger/dtos/http.dto';
 
 interface UploadedFileType {
   originalname: string;
@@ -18,6 +27,8 @@ interface UploadedFileType {
   buffer: Buffer;
 }
 
+@ApiTags('Anexos')
+@ApiBearerAuth('access-token')
 @Controller('/attachments')
 export class UploadAttachmentController {
   constructor(
@@ -26,6 +37,18 @@ export class UploadAttachmentController {
 
   @Post()
   @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ summary: 'Enviar anexo (png, jpg, jpeg ou pdf — máx. 2MB)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['file'],
+      properties: {
+        file: { type: 'string', format: 'binary' },
+      },
+    },
+  })
+  @ApiResponse({ status: 201, type: AttachmentUploadResponseDto })
   async handle(
     @UploadedFile(
       new ParseFilePipe({

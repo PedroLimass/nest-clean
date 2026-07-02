@@ -6,11 +6,20 @@ import {
   Param,
   Put,
 } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CurrentUser } from '@/infra/auth/current-user-decorator';
 import { type UserPayload } from '@/infra/auth/jwt.strategy';
 import { ZodValidationPipe } from '@/infra/http/pipes/zod-validation-pipe';
 import { z } from 'zod';
 import { EditAnswerUseCase } from '@/domain/forum/application/use-cases/edit-answer';
+import { EditAnswerBodyDto } from '../swagger/dtos/http.dto';
 
 const editAnswerBodySchema = z.object({
   content: z.string(),
@@ -20,12 +29,18 @@ const bodyValidationPipe = new ZodValidationPipe(editAnswerBodySchema);
 
 type EditAnswerBodySchema = z.infer<typeof editAnswerBodySchema>;
 
+@ApiTags('Respostas')
+@ApiBearerAuth('access-token')
 @Controller('/answers/:id')
 export class EditAnswerController {
   constructor(private editAnswer: EditAnswerUseCase) {}
 
   @Put()
   @HttpCode(204)
+  @ApiOperation({ summary: 'Editar resposta' })
+  @ApiParam({ name: 'id', description: 'ID da resposta' })
+  @ApiBody({ type: EditAnswerBodyDto })
+  @ApiResponse({ status: 204, description: 'Resposta atualizada' })
   async handle(
     @Body(bodyValidationPipe) body: EditAnswerBodySchema,
     @CurrentUser() user: UserPayload,

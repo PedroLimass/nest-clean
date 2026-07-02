@@ -5,10 +5,18 @@ import {
   Param,
   Query,
 } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { ZodValidationPipe } from '@/infra/http/pipes/zod-validation-pipe';
 import { z } from 'zod';
 import { FetchAnswerCommentsUseCase } from '@/domain/forum/application/use-cases/fetch-answer-comments';
-import { CommentPresenter } from '../presenters/comment-presenter';
+import { CommentWithAuthorPresenter } from '../presenters/comment-with-author-presenter';
 
 const pageQueryParamSchema = z
   .string()
@@ -21,11 +29,17 @@ const queryValidationPipe = new ZodValidationPipe(pageQueryParamSchema);
 
 type PageQueryParamSchema = z.infer<typeof pageQueryParamSchema>;
 
+@ApiTags('Comentários')
+@ApiBearerAuth('access-token')
 @Controller('/answers/:answerId/comments')
 export class FetchAnswerCommentsController {
   constructor(private fetchAnswerComments: FetchAnswerCommentsUseCase) {}
 
   @Get()
+  @ApiOperation({ summary: 'Listar comentários de uma resposta' })
+  @ApiParam({ name: 'answerId', description: 'ID da resposta' })
+  @ApiQuery({ name: 'page', required: false, example: 1 })
+  @ApiResponse({ status: 200, description: 'Lista paginada de comentários' })
   async handle(
     @Query('page', queryValidationPipe) page: PageQueryParamSchema,
     @Param('answerId') answerId: string,
@@ -39,12 +53,10 @@ export class FetchAnswerCommentsController {
       throw new BadRequestException();
     }
 
-    const answerComments = result.value.answerComments;
+    const comments = result.value.comments;
 
     return {
-      comments: answerComments.map((comment) =>
-        CommentPresenter.toHTTP(comment),
-      ),
+      comments: comments.map(CommentWithAuthorPresenter.toHTTP),
     };
   }
 }
