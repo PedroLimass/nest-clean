@@ -18,17 +18,17 @@ API REST de fórum Q&A construída com **NestJS** e **Clean Architecture** — p
 
 ## Stack
 
-| Camada | Tecnologias |
-|---|---|
-| Backend | NestJS 11, TypeScript |
-| Banco | PostgreSQL, Prisma 7 |
-| Cache | Redis, ioredis |
-| Storage | Cloudflare R2 (AWS SDK) |
-| Auth | Passport JWT, RS256 |
-| Validação | Zod |
-| Testes | Vitest, Supertest |
-| Docs | OpenAPI, Scalar |
-| Infra | Docker Compose |
+| Camada    | Tecnologias             |
+| --------- | ----------------------- |
+| Backend   | NestJS 11, TypeScript   |
+| Banco     | PostgreSQL, Prisma 7    |
+| Cache     | Redis, ioredis          |
+| Storage   | Cloudflare R2 (AWS SDK) |
+| Auth      | Passport JWT, RS256     |
+| Validação | Zod                     |
+| Testes    | Vitest, Supertest       |
+| Docs      | OpenAPI, Scalar         |
+| Infra     | Docker Compose          |
 
 ---
 
@@ -89,21 +89,22 @@ src/
 
 ### Padrões aplicados
 
-| Padrão | Onde |
-|---|---|
-| Repository | Abstração de persistência no domínio, implementação no Prisma |
-| Use Case | Uma ação de negócio por classe (`CreateQuestion`, `AnswerQuestion`…) |
-| Either | Retorno funcional de sucesso/erro sem exceções no domínio |
-| Value Object | `Slug`, `QuestionDetails`, `CommentWithAuthor` |
-| Domain Events | `AnswerCreated`, `QuestionBestAnswerChosen` → notificações |
-| Presenter | Transformação entity → JSON na camada HTTP |
-| Dependency Inversion | Domínio depende de abstrações, infra injeta implementações |
+| Padrão               | Onde                                                                 |
+| -------------------- | -------------------------------------------------------------------- |
+| Repository           | Abstração de persistência no domínio, implementação no Prisma        |
+| Use Case             | Uma ação de negócio por classe (`CreateQuestion`, `AnswerQuestion`…) |
+| Either               | Retorno funcional de sucesso/erro sem exceções no domínio            |
+| Value Object         | `Slug`, `QuestionDetails`, `CommentWithAuthor`                       |
+| Domain Events        | `AnswerCreated`, `QuestionBestAnswerChosen` → notificações           |
+| Presenter            | Transformação entity → JSON na camada HTTP                           |
+| Dependency Inversion | Domínio depende de abstrações, infra injeta implementações           |
 
 ---
 
 ## Funcionalidades
 
 ### Fórum
+
 - CRUD de perguntas e respostas
 - Comentários em perguntas e respostas (com autor)
 - Escolha da melhor resposta
@@ -111,10 +112,12 @@ src/
 - Detalhes da pergunta com autor, anexos e cache
 
 ### Notificações
+
 - Disparadas por eventos de domínio
 - Marcar como lida via API
 
 ### Autenticação
+
 - Registro e login de alunos
 - Rotas protegidas com Bearer JWT
 
@@ -124,10 +127,10 @@ src/
 
 Com o servidor rodando:
 
-| URL | Descrição |
-|---|---|
-| [`/docs`](http://localhost:3333/docs) | Interface Scalar (testar rotas no browser) |
-| [`/openapi.json`](http://localhost:3333/openapi.json) | Spec OpenAPI |
+| URL                                                   | Descrição                                  |
+| ----------------------------------------------------- | ------------------------------------------ |
+| [`/docs`](http://localhost:3333/docs)                 | Interface Scalar (testar rotas no browser) |
+| [`/openapi.json`](http://localhost:3333/openapi.json) | Spec OpenAPI                               |
 
 **Como autenticar no Scalar:**
 
@@ -165,20 +168,20 @@ API disponível em `http://localhost:3333` · Docs em `http://localhost:3333/doc
 <details>
 <summary>Clique para expandir</summary>
 
-| Variável | Descrição |
-|---|---|
-| `DATABASE_URL` | Conexão PostgreSQL |
-| `JWT_PRIVATE_KEY` | Chave privada JWT (base64) |
-| `JWT_PUBLIC_KEY` | Chave pública JWT (base64) |
-| `CLOUDFLARE_ACCOUNT_ID` | ID da conta Cloudflare |
-| `CLOUDFLARE_PUBLIC_URL` | URL pública do bucket |
-| `AWS_BUCKET_NAME` | Nome do bucket R2 |
-| `AWS_ACCESS_KEY_ID` | Access key R2 |
-| `AWS_SECRET_ACCESS_KEY` | Secret key R2 |
-| `REDIS_HOST` | Host Redis (padrão: `127.0.0.1`) |
-| `REDIS_PORT` | Porta Redis (padrão: `6379`) |
-| `REDIS_DB` | Database Redis (padrão: `0`) |
-| `PORT` | Porta da API (padrão: `3333`) |
+| Variável                | Descrição                        |
+| ----------------------- | -------------------------------- |
+| `DATABASE_URL`          | Conexão PostgreSQL               |
+| `JWT_PRIVATE_KEY`       | Chave privada JWT (base64)       |
+| `JWT_PUBLIC_KEY`        | Chave pública JWT (base64)       |
+| `CLOUDFLARE_ACCOUNT_ID` | ID da conta Cloudflare           |
+| `CLOUDFLARE_PUBLIC_URL` | URL pública do bucket            |
+| `AWS_BUCKET_NAME`       | Nome do bucket R2                |
+| `AWS_ACCESS_KEY_ID`     | Access key R2                    |
+| `AWS_SECRET_ACCESS_KEY` | Secret key R2                    |
+| `REDIS_HOST`            | Host Redis (padrão: `127.0.0.1`) |
+| `REDIS_PORT`            | Porta Redis (padrão: `6379`)     |
+| `REDIS_DB`              | Database Redis (padrão: `0`)     |
+| `PORT`                  | Porta da API (padrão: `3333`)    |
 
 </details>
 
@@ -189,50 +192,50 @@ API disponível em `http://localhost:3333` · Docs em `http://localhost:3333/doc
 <details>
 <summary><strong>Autenticação</strong> — rotas públicas</summary>
 
-| Método | Rota | Descrição |
-|---|---|---|
+| Método | Rota        | Descrição           |
+| ------ | ----------- | ------------------- |
 | `POST` | `/sessions` | Login → retorna JWT |
-| `POST` | `/accounts` | Criar conta |
+| `POST` | `/accounts` | Criar conta         |
 
 </details>
 
 <details>
 <summary><strong>Perguntas</strong></summary>
 
-| Método | Rota | Descrição |
-|---|---|---|
-| `GET` | `/questions` | Listar recentes (`?page=1`) |
-| `POST` | `/questions` | Criar pergunta |
-| `GET` | `/questions/:slug` | Detalhes (cache Redis) |
-| `PUT` | `/questions/:id` | Editar |
-| `DELETE` | `/questions/:id` | Excluir |
+| Método   | Rota               | Descrição                   |
+| -------- | ------------------ | --------------------------- |
+| `GET`    | `/questions`       | Listar recentes (`?page=1`) |
+| `POST`   | `/questions`       | Criar pergunta              |
+| `GET`    | `/questions/:slug` | Detalhes (cache Redis)      |
+| `PUT`    | `/questions/:id`   | Editar                      |
+| `DELETE` | `/questions/:id`   | Excluir                     |
 
 </details>
 
 <details>
 <summary><strong>Respostas</strong></summary>
 
-| Método | Rota | Descrição |
-|---|---|---|
-| `GET` | `/questions/:questionId/answers` | Listar |
-| `POST` | `/questions/:questionId/answers` | Criar |
-| `PUT` | `/answers/:id` | Editar |
-| `DELETE` | `/answers/:id` | Excluir |
-| `PATCH` | `/answers/:answerId/choose-as-best` | Melhor resposta |
+| Método   | Rota                                | Descrição       |
+| -------- | ----------------------------------- | --------------- |
+| `GET`    | `/questions/:questionId/answers`    | Listar          |
+| `POST`   | `/questions/:questionId/answers`    | Criar           |
+| `PUT`    | `/answers/:id`                      | Editar          |
+| `DELETE` | `/answers/:id`                      | Excluir         |
+| `PATCH`  | `/answers/:answerId/choose-as-best` | Melhor resposta |
 
 </details>
 
 <details>
 <summary><strong>Comentários · Anexos · Notificações</strong></summary>
 
-| Método | Rota | Descrição |
-|---|---|---|
+| Método     | Rota                      | Descrição               |
+| ---------- | ------------------------- | ----------------------- |
 | `GET/POST` | `/questions/:id/comments` | Comentários da pergunta |
-| `GET/POST` | `/answers/:id/comments` | Comentários da resposta |
-| `DELETE` | `/questions/comments/:id` | Excluir comentário |
-| `DELETE` | `/answers/comments/:id` | Excluir comentário |
-| `POST` | `/attachments` | Upload multipart |
-| `PATCH` | `/notifications/:id/read` | Marcar como lida |
+| `GET/POST` | `/answers/:id/comments`   | Comentários da resposta |
+| `DELETE`   | `/questions/comments/:id` | Excluir comentário      |
+| `DELETE`   | `/answers/comments/:id`   | Excluir comentário      |
+| `POST`     | `/attachments`            | Upload multipart        |
+| `PATCH`    | `/notifications/:id/read` | Marcar como lida        |
 
 </details>
 
